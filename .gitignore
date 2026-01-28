@@ -19,3 +19,10 @@ Thumbs.db
 # Lambda artifacts
 bootstrap
 bootstrap.zip
+
+# CDK artifacts
+cdk/node_modules/
+cdk/dist/
+cdk/cdk.out/
+cdk/.cdk.staging/
+cdk/package-lock.json

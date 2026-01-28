@@ -8,7 +8,7 @@ An Alexa Skill built in Rust that enables voice-controlled addition of items to 
 **Target Locale**: de-DE (Germany)
 **Architecture Pattern**: Hexagonal Architecture (Ports & Adapters)
 **Deployment**: AWS Lambda
-**Infrastructure**: AWS CDK (Rust) *(not yet implemented)*
+**Infrastructure**: AWS CDK (TypeScript with cargo-lambda-cdk)
 **API Base URL**: `https://de.tmmobile.vorwerk-digital.com`
 
 ---
@@ -218,8 +218,19 @@ alexa-cookidoo-skill/
 │           ├── cookidoo_auth_error.json        # Auth error response
 │           └── cookidoo_add_item_success.json  # Add item success response
 │
-├── cdk/                               # ═══ INFRASTRUCTURE ═══ (not yet implemented)
-│   └── ...                            # AWS CDK stack definitions
+├── cdk/                               # ═══ INFRASTRUCTURE ═══ (TypeScript CDK)
+│   ├── package.json                   # Node.js dependencies
+│   ├── tsconfig.json                  # TypeScript config
+│   ├── cdk.json                       # CDK app config
+│   ├── .npmignore                     # npm ignore patterns
+│   ├── bin/
+│   │   └── cdk-app.ts                 # CDK app entry point
+│   └── lib/
+│       └── alexa-skill-stack.ts       # Main stack definition
+│
+├── bin/                               # ═══ DEPLOYMENT SCRIPTS ═══
+│   ├── deploy.sh                      # Build and deploy script
+│   └── destroy.sh                     # Teardown script
 │
 └── .github/                           # ═══ CI/CD ═══ (not yet implemented)
     └── workflows/
@@ -532,66 +543,81 @@ Orchestrates the application, wires dependencies, and handles Lambda-specific co
 
 ### CDK Project Structure (`cdk/`)
 
-**`src/main.rs`**
+The infrastructure is implemented using **TypeScript CDK with cargo-lambda-cdk** construct. This approach was chosen because:
+- Native Rust CDK doesn't exist (CDK only supports TS, Python, Java, C#, Go)
+- Production-ready and well-documented
+- Native integration with cargo-lambda builds
+- Official support from Cargo Lambda maintainers
+- Handles ARM64 cross-compilation automatically
+
+**`cdk/bin/cdk-app.ts`**
 - **Purpose**: CDK app entry point
 - **Implementation**:
     - Create CDK App
     - Instantiate `AlexaSkillStack`
-    - Synthesize CloudFormation template
-- **Configuration**: Read from `cdk.json`
+    - Configure region (default: `eu-central-1`)
 
-**`src/stacks/alexa_skill_stack.rs`**
+**`cdk/lib/alexa-skill-stack.ts`**
 - **Purpose**: Define all AWS resources
 - **Resources**:
-    1. **Lambda Function**:
-        - Runtime: Custom Runtime (Rust binary)
-        - Handler: N/A (use custom runtime)
-        - Memory: 256 MB (adjust based on testing)
+    1. **Lambda Function** (via `RustFunction` from cargo-lambda-cdk):
+        - Runtime: `provided.al2023` (custom runtime)
+        - Memory: 256 MB
         - Timeout: 30 seconds
-        - Architecture: arm64 (for cost savings)
+        - Architecture: ARM64 (for cost savings)
         - Environment Variables:
-            - `COOKIDOO_EMAIL` (from CDK context/secrets)
-            - `COOKIDOO_PASSWORD` (from CDK context/secrets)
+            - `COOKIDOO_EMAIL` (from environment)
+            - `COOKIDOO_PASSWORD` (from environment)
+            - `COOKIDOO_CLIENT_ID` (from environment)
+            - `COOKIDOO_CLIENT_SECRET` (from environment)
             - `RUST_LOG=info`
     2. **IAM Role**:
-        - Basic Lambda execution role
+        - Basic Lambda execution role (auto-created by CDK)
         - CloudWatch Logs permissions
     3. **Lambda Permission**:
         - Allow Alexa Skills Kit to invoke function
         - Principal: `alexa-appkit.amazon.com`
-        - Condition: Alexa Skill ID
     4. **CloudWatch Log Group**:
-        - Retention: 7 days (configurable)
-        - Log format: JSON
+        - Retention: 7 days
+        - Removal policy: DESTROY (for easy cleanup)
 - **Outputs**:
     - Lambda Function ARN (for Alexa Skill configuration)
-    - Log Group name
+    - Lambda Function Name
+    - Log Group Name
 
-**`cdk.json`**
+**`cdk/package.json`**
+- **Purpose**: Node.js dependencies
+- **Key packages**:
+    - `aws-cdk-lib` ^2.170.0
+    - `cargo-lambda-cdk` ^0.0.32
+    - `constructs` ^10.0.0
+
+**`cdk/cdk.json`**
 - **Purpose**: CDK configuration
 - **Contents**:
-    - App command: `cargo run`
-    - Context parameters
+    - App command: `npx ts-node bin/cdk-app.ts`
     - Feature flags
     - Build settings
 
+### Deployment Scripts (`bin/`)
+
 **`bin/deploy.sh`**
-- **Purpose**: Deployment script
+- **Purpose**: Full deployment script
 - **Steps**:
-    1. Build Rust binary with Cargo Lambda
-    2. Bootstrap CDK (if needed)
-    3. Deploy stack
-    4. Output Lambda ARN
-- **Requirements**:
-    - `cargo-lambda` installed
-    - AWS credentials configured
-    - CDK CLI installed
+    1. Check prerequisites (cargo-lambda, npm, aws cli)
+    2. Load `.env` file (if exists)
+    3. Validate required environment variables
+    4. Build Rust Lambda (`cargo lambda build --release --arm64`)
+    5. Install CDK dependencies (`npm ci`)
+    6. Bootstrap CDK (if needed)
+    7. Deploy stack (`cdk deploy`)
+    8. Output Lambda ARN
 
 **`bin/destroy.sh`**
 - **Purpose**: Cleanup script
 - **Steps**:
-    1. Destroy CDK stack
-    2. Clean up bootstrap resources (optional)
+    1. Install CDK dependencies (if needed)
+    2. Destroy CDK stack (`cdk destroy --force`)
 
 ### Alexa Skill Configuration
 
@@ -1411,9 +1437,31 @@ name = "bootstrap"
 path = "src/main.rs"
 ```
 
-### D. CDK Dependencies (not yet implemented)
+### D. CDK Dependencies (TypeScript)
 
-The CDK infrastructure is planned but not yet implemented. When implemented, it will be added as a workspace member.
+The CDK infrastructure uses TypeScript with the following key packages:
+
+**`cdk/package.json`**:
+```json
+{
+  "dependencies": {
+    "aws-cdk-lib": "^2.170.0",
+    "cargo-lambda-cdk": "^0.0.32",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "~5.3.3",
+    "aws-cdk": "^2.170.0"
+  }
+}
+```
+
+The `cargo-lambda-cdk` construct provides the `RustFunction` class which:
+- Automatically builds Rust code using cargo-lambda
+- Supports ARM64 architecture
+- Handles the `provided.al2023` runtime configuration
+- Integrates seamlessly with AWS CDK
 
 ---
 
