@@ -1,0 +1,34 @@
+[package]
+name = "alexa-cookidoo-skill"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Lambda
+lambda_runtime = "1.0.2"
+
+# HTTP
+reqwest = { version = "0.13.1", default-features = false, features = ["json", "rustls", "form"] }
+
+# Async
+async-trait = "0.1"
+
+# Environment
+dotenvy = "0.15"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+wiremock = "0.6.5"
+mockall = "0.14.0"
+
+[[bin]]
+name = "bootstrap"
+path = "src/main.rs"

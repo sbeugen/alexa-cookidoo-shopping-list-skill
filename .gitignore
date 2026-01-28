@@ -1,0 +1,21 @@
+# Environment files (contain secrets)
+.env
+.env.local
+
+# Rust build artifacts
+/target/
+**/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lambda artifacts
+bootstrap
+bootstrap.zip
