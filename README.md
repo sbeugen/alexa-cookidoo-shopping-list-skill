@@ -6,6 +6,8 @@ An Alexa Skill built in Rust that enables voice-controlled addition of items to 
 
 - Rust (1.83+)
 - [cargo-lambda](https://www.cargo-lambda.info/) for local development and deployment
+- Node.js (20+) and npm for CDK deployment
+- AWS CLI configured with appropriate credentials
 
 Install cargo-lambda:
 ```bash
@@ -42,7 +44,12 @@ alexa-cookidoo-shopping-list-skill/
 │           ├── help_request.json
 │           ├── stop_request.json
 │           └── ...
-└── cdk/                    # Infrastructure (AWS CDK) - coming soon
+├── cdk/                    # AWS CDK infrastructure
+│   ├── bin/cdk-app.ts      # CDK app entry point
+│   └── lib/cdk-stack.ts    # Stack definition
+└── .github/workflows/      # CI/CD pipelines
+    ├── ci.yml              # Build, test, lint on push/PR
+    └── deploy.yml          # Manual deployment workflow
 ```
 
 ## Local Development
@@ -94,3 +101,55 @@ cargo lambda build --release --arm64
 ```bash
 cargo test
 ```
+
+## Deployment
+
+The infrastructure is managed with AWS CDK using TypeScript.
+
+### Prerequisites
+
+1. Build the Lambda binary:
+   ```bash
+   cargo lambda build --release --arm64
+   ```
+
+2. Set environment variables for Cookidoo credentials:
+   ```bash
+   export COOKIDOO_EMAIL="your-email@example.com"
+   export COOKIDOO_PASSWORD="your-password"
+   export COOKIDOO_CLIENT_ID="your-client-id"
+   export COOKIDOO_CLIENT_SECRET="your-client-secret"
+   ```
+
+3. Install CDK dependencies:
+   ```bash
+   cd cdk
+   npm install
+   ```
+
+### Deploy
+
+```bash
+cd cdk
+npx cdk deploy
+```
+
+### Other CDK Commands
+
+```bash
+# Preview changes before deploying
+npx cdk diff
+
+# Synthesize CloudFormation template
+npx cdk synth
+
+# Destroy the stack
+npx cdk destroy
+```
+
+### CI/CD
+
+The project includes GitHub Actions workflows:
+
+- **CI** (`.github/workflows/ci.yml`): Runs on push to `main` and pull requests. Executes code quality checks, tests, builds, and security audits.
+- **Deploy** (`.github/workflows/deploy.yml`): Manual workflow for deploying to AWS. Requires GitHub secrets for AWS credentials and Cookidoo configuration.
