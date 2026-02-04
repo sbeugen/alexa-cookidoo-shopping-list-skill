@@ -25,7 +25,9 @@ struct FailingRepository;
 #[async_trait]
 impl ShoppingListRepository for FailingRepository {
     async fn add_item(&self, _item: &ShoppingListItem) -> Result<(), DomainError> {
-        Err(DomainError::RepositoryError("Connection failed".to_string()))
+        Err(DomainError::RepositoryError(
+            "Connection failed".to_string(),
+        ))
     }
 }
 
@@ -35,7 +37,9 @@ struct AuthFailingRepository;
 #[async_trait]
 impl ShoppingListRepository for AuthFailingRepository {
     async fn add_item(&self, _item: &ShoppingListItem) -> Result<(), DomainError> {
-        Err(DomainError::AuthenticationFailed("Invalid token".to_string()))
+        Err(DomainError::AuthenticationFailed(
+            "Invalid token".to_string(),
+        ))
     }
 }
 
@@ -48,7 +52,8 @@ fn load_fixture(name: &str) -> AlexaRequest {
     let path = format!("tests/fixtures/{}", name);
     let content = std::fs::read_to_string(&path)
         .unwrap_or_else(|_| panic!("Failed to read fixture: {}", path));
-    serde_json::from_str(&content).unwrap_or_else(|e| panic!("Failed to parse fixture {}: {}", path, e))
+    serde_json::from_str(&content)
+        .unwrap_or_else(|e| panic!("Failed to parse fixture {}: {}", path, e))
 }
 
 #[tokio::test]
@@ -105,7 +110,11 @@ async fn add_item_empty_slot_returns_unknown() {
 
     // Empty slot should be treated as unknown intent
     assert!(!response.response.should_end_session);
-    assert!(response.response.output_speech.text.contains("nicht verstanden"));
+    assert!(response
+        .response
+        .output_speech
+        .text
+        .contains("nicht verstanden"));
 }
 
 #[tokio::test]
@@ -116,7 +125,11 @@ async fn add_item_repository_error_returns_error_message() {
     let response = handler.handle(request).await;
 
     assert!(response.response.should_end_session);
-    assert!(response.response.output_speech.text.contains("nicht hinzugefügt"));
+    assert!(response
+        .response
+        .output_speech
+        .text
+        .contains("nicht hinzugefügt"));
 }
 
 #[tokio::test]

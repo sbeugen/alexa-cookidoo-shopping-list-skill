@@ -42,7 +42,10 @@ impl<R: ShoppingListRepository> AddItemService<R> {
         match self.repository.add_item(&item).await {
             Ok(()) => {
                 info!(item_name = %item.name(), "Item added to shopping list");
-                Ok(format!("{} wurde zur Einkaufsliste hinzugefügt.", item.name()))
+                Ok(format!(
+                    "{} wurde zur Einkaufsliste hinzugefügt.",
+                    item.name()
+                ))
             }
             Err(DomainError::AuthenticationFailed(msg)) => {
                 error!(error = %msg, "Authentication failed while adding item");
@@ -50,7 +53,10 @@ impl<R: ShoppingListRepository> AddItemService<R> {
             }
             Err(DomainError::RepositoryError(msg)) => {
                 error!(error = %msg, "Repository error while adding item");
-                Err("Der Artikel konnte nicht hinzugefügt werden. Bitte versuche es später erneut.".to_string())
+                Err(
+                    "Der Artikel konnte nicht hinzugefügt werden. Bitte versuche es später erneut."
+                        .to_string(),
+                )
             }
             Err(e) => {
                 error!(error = %e, "Unexpected error adding item");
@@ -99,9 +105,13 @@ mod tests {
         async fn add_item(&self, _item: &ShoppingListItem) -> Result<(), DomainError> {
             if self.should_fail.load(Ordering::SeqCst) {
                 if self.fail_with_auth.load(Ordering::SeqCst) {
-                    Err(DomainError::AuthenticationFailed("Invalid token".to_string()))
+                    Err(DomainError::AuthenticationFailed(
+                        "Invalid token".to_string(),
+                    ))
                 } else {
-                    Err(DomainError::RepositoryError("Connection failed".to_string()))
+                    Err(DomainError::RepositoryError(
+                        "Connection failed".to_string(),
+                    ))
                 }
             } else {
                 Ok(())

@@ -61,8 +61,8 @@ impl<R: ShoppingListRepository> AlexaSkillHandler<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use async_trait::async_trait;
     use crate::domain::models::{DomainError, ShoppingListItem};
+    use async_trait::async_trait;
 
     struct MockRepository {
         should_fail: bool,

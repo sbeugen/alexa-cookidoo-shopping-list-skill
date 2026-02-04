@@ -49,14 +49,22 @@ async fn authentication_success() {
 
     Mock::given(method("POST"))
         .and(path("/ciam/auth/token"))
-        .and(header("Authorization", "Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ="))
+        .and(header(
+            "Authorization",
+            "Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=",
+        ))
         .and(body_string_contains("grant_type=password"))
         .respond_with(auth_success_response())
         .mount(&mock_server)
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = CookidooAuthAdapter::new(client, test_credentials(), test_client_id(), test_client_secret());
+    let auth = CookidooAuthAdapter::new(
+        client,
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    );
 
     let token = auth.get_valid_token().await;
 
@@ -78,7 +86,12 @@ async fn authentication_failure_invalid_credentials() {
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = CookidooAuthAdapter::new(client, test_credentials(), test_client_id(), test_client_secret());
+    let auth = CookidooAuthAdapter::new(
+        client,
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    );
 
     let token = auth.get_valid_token().await;
 
@@ -97,7 +110,12 @@ async fn token_caching_reuses_valid_token() {
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = CookidooAuthAdapter::new(client, test_credentials(), test_client_id(), test_client_secret());
+    let auth = CookidooAuthAdapter::new(
+        client,
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    );
 
     // First call - should authenticate
     let token1 = auth.get_valid_token().await.unwrap();
@@ -129,7 +147,12 @@ async fn add_item_success() {
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = Arc::new(CookidooAuthAdapter::new(client.clone(), test_credentials(), test_client_id(), test_client_secret()));
+    let auth = Arc::new(CookidooAuthAdapter::new(
+        client.clone(),
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    ));
     let shopping_list = CookidooShoppingListAdapter::new(client, auth);
 
     let item = ShoppingListItem::new("Milk").unwrap();
@@ -166,7 +189,12 @@ async fn add_item_retries_on_401() {
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = Arc::new(CookidooAuthAdapter::new(client.clone(), test_credentials(), test_client_id(), test_client_secret()));
+    let auth = Arc::new(CookidooAuthAdapter::new(
+        client.clone(),
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    ));
     let shopping_list = CookidooShoppingListAdapter::new(client, auth);
 
     let item = ShoppingListItem::new("Milk").unwrap();
@@ -192,7 +220,12 @@ async fn add_item_fails_on_server_error() {
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = Arc::new(CookidooAuthAdapter::new(client.clone(), test_credentials(), test_client_id(), test_client_secret()));
+    let auth = Arc::new(CookidooAuthAdapter::new(
+        client.clone(),
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    ));
     let shopping_list = CookidooShoppingListAdapter::new(client, auth);
 
     let item = ShoppingListItem::new("Milk").unwrap();
@@ -233,7 +266,12 @@ async fn token_refresh_on_expiry() {
         .await;
 
     let client = CookidooClient::with_base_url(mock_server.uri());
-    let auth = CookidooAuthAdapter::new(client, test_credentials(), test_client_id(), test_client_secret());
+    let auth = CookidooAuthAdapter::new(
+        client,
+        test_credentials(),
+        test_client_id(),
+        test_client_secret(),
+    );
 
     // First call - get initial token
     let token1 = auth.get_valid_token().await.unwrap();

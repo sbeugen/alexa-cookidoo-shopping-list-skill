@@ -65,12 +65,12 @@ fn error_response(message: &str) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lambda_runtime::Context;
-    use std::sync::Arc;
-    use async_trait::async_trait;
     use crate::domain::models::{DomainError, ShoppingListItem};
     use crate::domain::ports::ShoppingListRepository;
     use crate::domain::services::AddItemService;
+    use async_trait::async_trait;
+    use lambda_runtime::Context;
+    use std::sync::Arc;
 
     struct MockRepository;
 

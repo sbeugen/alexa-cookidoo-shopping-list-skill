@@ -80,7 +80,11 @@ mod tests {
     #[test]
     fn clears_token() {
         let cache = TokenCache::new();
-        cache.set(AuthToken::new("access", "refresh", Duration::from_secs(3600)));
+        cache.set(AuthToken::new(
+            "access",
+            "refresh",
+            Duration::from_secs(3600),
+        ));
 
         cache.clear();
 
@@ -98,7 +102,11 @@ mod tests {
     #[test]
     fn is_valid_returns_true_for_fresh_token() {
         let cache = TokenCache::new();
-        cache.set(AuthToken::new("access", "refresh", Duration::from_secs(3600)));
+        cache.set(AuthToken::new(
+            "access",
+            "refresh",
+            Duration::from_secs(3600),
+        ));
 
         assert!(cache.is_valid());
     }

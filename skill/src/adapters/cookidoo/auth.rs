@@ -160,7 +160,10 @@ impl CookidooAuthAdapter {
         }
     }
 
-    async fn refresh_token_internal(&self, refresh_token: &str) -> Result<AuthToken, CookidooError> {
+    async fn refresh_token_internal(
+        &self,
+        refresh_token: &str,
+    ) -> Result<AuthToken, CookidooError> {
         let url = self.client.url(TOKEN_ENDPOINT);
 
         let params = [

@@ -35,10 +35,8 @@ impl Container {
         ));
 
         // Create shopping list adapter
-        let shopping_list_adapter = Arc::new(CookidooShoppingListAdapter::new(
-            client,
-            auth_adapter,
-        ));
+        let shopping_list_adapter =
+            Arc::new(CookidooShoppingListAdapter::new(client, auth_adapter));
 
         // Create domain service
         let add_item_service = Arc::new(AddItemService::new(shopping_list_adapter));

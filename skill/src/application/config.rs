@@ -39,8 +39,9 @@ impl AppConfig {
         let client_id = env::var(env_vars::COOKIDOO_CLIENT_ID)
             .map_err(|_| ConfigError::MissingEnvVar(env_vars::COOKIDOO_CLIENT_ID.to_string()))?;
 
-        let client_secret = env::var(env_vars::COOKIDOO_CLIENT_SECRET)
-            .map_err(|_| ConfigError::MissingEnvVar(env_vars::COOKIDOO_CLIENT_SECRET.to_string()))?;
+        let client_secret = env::var(env_vars::COOKIDOO_CLIENT_SECRET).map_err(|_| {
+            ConfigError::MissingEnvVar(env_vars::COOKIDOO_CLIENT_SECRET.to_string())
+        })?;
 
         Ok(Self {
             cookidoo_credentials: CookidooCredentials::new(email, password),
