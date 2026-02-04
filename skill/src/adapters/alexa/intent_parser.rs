@@ -34,9 +34,9 @@ mod slot_names {
 /// Parses an Alexa request into a domain-friendly intent.
 pub fn parse(request: &AlexaRequest) -> ParsedIntent {
     match &request.request {
-        Request::LaunchRequest(_) => ParsedIntent::Launch,
+        Request::Launch(_) => ParsedIntent::Launch,
 
-        Request::IntentRequest(intent_req) => {
+        Request::Intent(intent_req) => {
             let intent_name = intent_req.intent.name.as_str();
 
             match intent_name {
@@ -62,7 +62,7 @@ pub fn parse(request: &AlexaRequest) -> ParsedIntent {
             }
         }
 
-        Request::SessionEndedRequest(_) => ParsedIntent::Stop,
+        Request::SessionEnded(_) => ParsedIntent::Stop,
     }
 }
 

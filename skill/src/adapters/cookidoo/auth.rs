@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use base64::prelude::*;
 use tracing::{debug, error};
 
 use crate::domain::models::{AuthToken, CookidooCredentials, DomainError};
@@ -25,32 +26,47 @@ pub struct CookidooAuthAdapter {
 
 impl CookidooAuthAdapter {
     /// Creates a new CookidooAuthAdapter.
+    ///
+    /// The `client_id` and `client_secret` are combined and base64-encoded
+    /// to create the Basic authorization header for OAuth requests.
     pub fn new(
         client: CookidooClient,
         credentials: CookidooCredentials,
-        auth_header: String,
+        client_id: &str,
+        client_secret: &str,
     ) -> Self {
         Self {
             client,
             cache: Arc::new(TokenCache::new()),
             credentials,
-            auth_header,
+            auth_header: Self::build_auth_header(client_id, client_secret),
         }
     }
 
     /// Creates a new CookidooAuthAdapter with a shared token cache.
+    ///
+    /// The `client_id` and `client_secret` are combined and base64-encoded
+    /// to create the Basic authorization header for OAuth requests.
     pub fn with_cache(
         client: CookidooClient,
         credentials: CookidooCredentials,
-        auth_header: String,
+        client_id: &str,
+        client_secret: &str,
         cache: Arc<TokenCache>,
     ) -> Self {
         Self {
             client,
             cache,
             credentials,
-            auth_header,
+            auth_header: Self::build_auth_header(client_id, client_secret),
         }
+    }
+
+    /// Builds the Basic authorization header from client credentials.
+    fn build_auth_header(client_id: &str, client_secret: &str) -> String {
+        let credentials = format!("{}:{}", client_id, client_secret);
+        let encoded = BASE64_STANDARD.encode(credentials.as_bytes());
+        format!("Basic {}", encoded)
     }
 
     /// Returns a reference to the token cache.

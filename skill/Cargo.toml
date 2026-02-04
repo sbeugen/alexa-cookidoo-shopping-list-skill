@@ -18,6 +18,9 @@ lambda_runtime = "1.0.2"
 # HTTP
 reqwest = { version = "0.13.1", default-features = false, features = ["json", "rustls", "form"] }
 
+# Encoding
+base64 = "0.22"
+
 # Async
 async-trait = "0.1"
 

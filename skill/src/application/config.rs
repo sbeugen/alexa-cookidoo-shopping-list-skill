@@ -6,14 +6,16 @@ use crate::domain::models::CookidooCredentials;
 mod env_vars {
     pub const COOKIDOO_EMAIL: &str = "COOKIDOO_EMAIL";
     pub const COOKIDOO_PASSWORD: &str = "COOKIDOO_PASSWORD";
-    pub const COOKIDOO_AUTH_HEADER: &str = "COOKIDOO_AUTH_HEADER";
+    pub const COOKIDOO_CLIENT_ID: &str = "COOKIDOO_CLIENT_ID";
+    pub const COOKIDOO_CLIENT_SECRET: &str = "COOKIDOO_CLIENT_SECRET";
 }
 
 /// Application configuration loaded from environment variables.
 #[derive(Debug, Clone)]
 pub struct AppConfig {
     cookidoo_credentials: CookidooCredentials,
-    cookidoo_auth_header: String,
+    cookidoo_client_id: String,
+    cookidoo_client_secret: String,
 }
 
 impl AppConfig {
@@ -22,7 +24,8 @@ impl AppConfig {
     /// # Required Environment Variables
     /// - `COOKIDOO_EMAIL`: Cookidoo account email
     /// - `COOKIDOO_PASSWORD`: Cookidoo account password
-    /// - `COOKIDOO_AUTH_HEADER`: Cookidoo API authorization header
+    /// - `COOKIDOO_CLIENT_ID`: Cookidoo OAuth client ID
+    /// - `COOKIDOO_CLIENT_SECRET`: Cookidoo OAuth client secret
     ///
     /// # Errors
     /// Returns an error if any required environment variable is missing.
@@ -33,12 +36,16 @@ impl AppConfig {
         let password = env::var(env_vars::COOKIDOO_PASSWORD)
             .map_err(|_| ConfigError::MissingEnvVar(env_vars::COOKIDOO_PASSWORD.to_string()))?;
 
-        let auth_header = env::var(env_vars::COOKIDOO_AUTH_HEADER)
-            .map_err(|_| ConfigError::MissingEnvVar(env_vars::COOKIDOO_AUTH_HEADER.to_string()))?;
+        let client_id = env::var(env_vars::COOKIDOO_CLIENT_ID)
+            .map_err(|_| ConfigError::MissingEnvVar(env_vars::COOKIDOO_CLIENT_ID.to_string()))?;
+
+        let client_secret = env::var(env_vars::COOKIDOO_CLIENT_SECRET)
+            .map_err(|_| ConfigError::MissingEnvVar(env_vars::COOKIDOO_CLIENT_SECRET.to_string()))?;
 
         Ok(Self {
             cookidoo_credentials: CookidooCredentials::new(email, password),
-            cookidoo_auth_header: auth_header,
+            cookidoo_client_id: client_id,
+            cookidoo_client_secret: client_secret,
         })
     }
 
@@ -47,9 +54,14 @@ impl AppConfig {
         &self.cookidoo_credentials
     }
 
-    /// Returns the Cookidoo API authorization header.
-    pub fn cookidoo_auth_header(&self) -> &str {
-        &self.cookidoo_auth_header
+    /// Returns the Cookidoo OAuth client ID.
+    pub fn cookidoo_client_id(&self) -> &str {
+        &self.cookidoo_client_id
+    }
+
+    /// Returns the Cookidoo OAuth client secret.
+    pub fn cookidoo_client_secret(&self) -> &str {
+        &self.cookidoo_client_secret
     }
 }
 
@@ -90,13 +102,15 @@ mod tests {
             &[
                 ("COOKIDOO_EMAIL", "test@example.com"),
                 ("COOKIDOO_PASSWORD", "secret123"),
-                ("COOKIDOO_AUTH_HEADER", "Basic dGVzdDp0ZXN0"),
+                ("COOKIDOO_CLIENT_ID", "my-client-id"),
+                ("COOKIDOO_CLIENT_SECRET", "my-client-secret"),
             ],
             || {
                 let config = AppConfig::from_env().unwrap();
                 assert_eq!(config.cookidoo_credentials().email(), "test@example.com");
                 assert_eq!(config.cookidoo_credentials().password(), "secret123");
-                assert_eq!(config.cookidoo_auth_header(), "Basic dGVzdDp0ZXN0");
+                assert_eq!(config.cookidoo_client_id(), "my-client-id");
+                assert_eq!(config.cookidoo_client_secret(), "my-client-secret");
             },
         );
     }
@@ -106,7 +120,8 @@ mod tests {
         with_env_vars(
             &[
                 ("COOKIDOO_PASSWORD", "secret123"),
-                ("COOKIDOO_AUTH_HEADER", "Basic dGVzdDp0ZXN0"),
+                ("COOKIDOO_CLIENT_ID", "my-client-id"),
+                ("COOKIDOO_CLIENT_SECRET", "my-client-secret"),
             ],
             || {
                 let result = AppConfig::from_env();
@@ -120,7 +135,8 @@ mod tests {
         with_env_vars(
             &[
                 ("COOKIDOO_EMAIL", "test@example.com"),
-                ("COOKIDOO_AUTH_HEADER", "Basic dGVzdDp0ZXN0"),
+                ("COOKIDOO_CLIENT_ID", "my-client-id"),
+                ("COOKIDOO_CLIENT_SECRET", "my-client-secret"),
             ],
             || {
                 let result = AppConfig::from_env();
@@ -130,11 +146,27 @@ mod tests {
     }
 
     #[test]
-    fn returns_error_when_auth_header_missing() {
+    fn returns_error_when_client_id_missing() {
         with_env_vars(
             &[
                 ("COOKIDOO_EMAIL", "test@example.com"),
                 ("COOKIDOO_PASSWORD", "secret123"),
+                ("COOKIDOO_CLIENT_SECRET", "my-client-secret"),
+            ],
+            || {
+                let result = AppConfig::from_env();
+                assert!(matches!(result, Err(ConfigError::MissingEnvVar(_))));
+            },
+        );
+    }
+
+    #[test]
+    fn returns_error_when_client_secret_missing() {
+        with_env_vars(
+            &[
+                ("COOKIDOO_EMAIL", "test@example.com"),
+                ("COOKIDOO_PASSWORD", "secret123"),
+                ("COOKIDOO_CLIENT_ID", "my-client-id"),
             ],
             || {
                 let result = AppConfig::from_env();

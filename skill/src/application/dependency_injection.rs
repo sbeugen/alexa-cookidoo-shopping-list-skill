@@ -29,7 +29,8 @@ impl Container {
         let auth_adapter = Arc::new(CookidooAuthAdapter::with_cache(
             client.clone(),
             config.cookidoo_credentials().clone(),
-            config.cookidoo_auth_header().to_string(),
+            config.cookidoo_client_id(),
+            config.cookidoo_client_secret(),
             token_cache,
         ));
 

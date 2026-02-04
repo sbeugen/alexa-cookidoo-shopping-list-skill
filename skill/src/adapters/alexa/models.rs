@@ -43,9 +43,12 @@ pub struct User {
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type")]
 pub enum Request {
-    LaunchRequest(LaunchRequest),
-    IntentRequest(IntentRequest),
-    SessionEndedRequest(SessionEndedRequest),
+    #[serde(rename = "LaunchRequest")]
+    Launch(LaunchRequest),
+    #[serde(rename = "IntentRequest")]
+    Intent(IntentRequest),
+    #[serde(rename = "SessionEndedRequest")]
+    SessionEnded(SessionEndedRequest),
 }
 
 /// Launch request when user opens the skill.
@@ -157,7 +160,7 @@ mod tests {
 
         let request: AlexaRequest = serde_json::from_str(json).unwrap();
         assert_eq!(request.version, "1.0");
-        assert!(matches!(request.request, Request::LaunchRequest(_)));
+        assert!(matches!(request.request, Request::Launch(_)));
     }
 
     #[test]
@@ -188,7 +191,7 @@ mod tests {
         }"#;
 
         let request: AlexaRequest = serde_json::from_str(json).unwrap();
-        if let Request::IntentRequest(intent_req) = &request.request {
+        if let Request::Intent(intent_req) = &request.request {
             assert_eq!(intent_req.intent.name, "AddItemIntent");
             assert_eq!(
                 intent_req.intent.slots.get("Item").unwrap().value,
@@ -215,7 +218,7 @@ mod tests {
         }"#;
 
         let request: AlexaRequest = serde_json::from_str(json).unwrap();
-        if let Request::IntentRequest(intent_req) = &request.request {
+        if let Request::Intent(intent_req) = &request.request {
             assert_eq!(intent_req.intent.name, "AMAZON.HelpIntent");
             assert!(intent_req.intent.slots.is_empty());
         } else {
